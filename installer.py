@@ -11,6 +11,7 @@ from space_net_lib.logger.logger import DefaultLogger
 import random
 import string
 import grp, pwd
+import shutil
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -213,6 +214,13 @@ def is_sudo_exist():
     except subprocess.CalledProcessError:
         return False
 
+def required_package_check(logger):
+    if not shutil.which("setfacl"):
+        logger.error("This script required 'setfacl' but it doesn't exist.")
+        raise Exception("RequiredPackageNotInstalledError")
+    elif not shutil.which("sudo"):
+        logger.error("This script required 'sudo' but it doesn't exist.")
+        raise Exception("RequiredPackageNotInstalledError")
 
 class Setup:
     def __init__(self):
@@ -229,10 +237,7 @@ class Setup:
         self.arguments_parser()
 
     def main(self):
-        # if not tool.is_elevated():
-        #     self.logger.error("This script must be run as root(administrator mode in Windows)")
-        #     sys.exit(1)
-
+        required_package_check(self.logger)
         self.logger.info(f"These applications will be install: \n{", ".join(map(str, self.install_application_list))}")
 
         result = str(input("To confirm the install, type 'yes' to continue: "))
