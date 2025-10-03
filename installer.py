@@ -293,6 +293,7 @@ class Setup:
         else:
             print("Sudo session exists.")
 
+        print("Flag bypass_create_user {}".format(self.bypass_create_user))
         if not self.bypass_create_user:
             print("Creating account for service usage...")
 
@@ -300,7 +301,6 @@ class Setup:
                 username = app_info["currentUser"]
 
                 exists = check_user_exists(username)
-                print("{} {}".format(username, exists))
                 if exists:
                     continue
 
@@ -322,7 +322,7 @@ class Setup:
             username = app_info["currentUser"]
             group_name = username.replace("-user", "-group")
 
-            print("Adding user {}".format(username))
+            print("Adding user {} to group {}".format(username, group_name))
             add_user_to_group(group_name, username)
 
         # for username, dir in user_dict.items():
@@ -404,7 +404,7 @@ class Setup:
             if app_info['useCustomPort'] is True:
                 app_exec_command += " " + app_info['setPortArg']
             elif app_info.get("defaultPort") is not None:
-                app_exec_command += " " + app_info['setPortArg'] + app_info['defaultPort']
+                app_exec_command += " " + app_info['setPortArg'] + str(app_info['defaultPort'])
 
             bootstrap = textwrap.dedent(f"""#!/bin/bash
                                         # shellcheck disable=SC2164
