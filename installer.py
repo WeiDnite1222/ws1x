@@ -291,10 +291,9 @@ class Setup:
         if not self.bypass_create_group:
             print("Creating group...")
             for app_name, app_info in applications.items():
-                group_name = app_info["currentUser"]
+                group_name = app_info["currentUser"].replace("-user", "-group")
 
                 if check_group_exists(group_name):
-                    print(check_group_exists(group_name))
                     continue
 
                 print("Creating group {}".format(group_name))
