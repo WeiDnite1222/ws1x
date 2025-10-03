@@ -248,13 +248,20 @@ class Setup:
             self.logger.info("Virtual environment already exists")
 
         current_venv_path = os.path.join(root_dir, "main-venv")
+        current_pip_path = os.path.join(current_venv_path, "bin", "pip")
 
-        if sys.prefix == sys.base_prefix:
-            print("Entering virtual environment....")
-            try:
-                subprocess.run(["source", os.path.join(current_venv_path, "bin", "activate")], check=True)
-            except Exception as error:
-                raise Exception("Unable to enter virtual environment ERROR:{}".format(error))
+        # if sys.prefix == sys.base_prefix:
+        #     print("Entering virtual environment....")
+        #     try:
+        #         subprocess.run(["source", os.path.join(current_venv_path, "bin", "activate")], check=True)
+        #     except Exception as error:
+        #         raise Exception("Unable to enter virtual environment ERROR:{}".format(error))
+
+        try:
+            print("Exporting venv pip to PATH...")
+            subprocess.run(["export", f"PATH=\"{current_pip_path}\""])
+        except Exception as error:
+            raise Exception("Unable to export venv pip to PATH. ERROR:{}".format(error))
 
         print("Installing required packages...")
 
