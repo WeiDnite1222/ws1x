@@ -498,12 +498,14 @@ class Setup:
                 except Exception as error:
                     raise Exception("Unable to start service name {} ERROR:{}".format(service_name, error))
 
+        result = str(input("Restart daemon right now? (y/n)"))
 
-        print("Restarting service...")
-        try:
-            subprocess.run(['sudo', "systemctl", "daemon-reload"], check=True)
-        except Exception as error:
-            raise Exception("Unable to restart service. ERROR:{}".format(error))
+        if result.lower() == "y":
+            try:
+                print("Restarting service...")
+                subprocess.run(['sudo', "systemctl", "daemon-reload"], check=True)
+            except Exception as error:
+                raise Exception("Unable to restart service. ERROR:{}".format(error))
 
         print("If you running SpaceNET on the container, Use bootstrap.sh to launch application.")
 
