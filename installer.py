@@ -266,7 +266,6 @@ class Setup:
             print("Processing {}".format(app_name))
 
             if os.path.exists(os.path.join(app_path, "requirements.txt")):
-                print(os.path.join(app_path, "requirements.txt"))
                 install_requirements(os.path.join(app_path, "requirements.txt"))
 
         print("Creating dependencies folder....")
@@ -275,18 +274,6 @@ class Setup:
             if not os.path.exists(dir):
                 print("Creating folder {}".format(dir))
                 mkdir_in_sudo(dir)
-
-        # user_dict = {
-        #     "spacenet-api-user": [
-        #         path.api_data_path, path.api_config_path
-        #     ],
-        #     "spacenet-manage-user": [
-        #         path.manage_data_path, path.manage_config_path
-        #     ],
-        #     "spacenet-dynamicpages-user": [
-        #         path.dynamic_pages_data_path, path.dynamic_pages_config_path
-        #     ]
-        # }
 
         if not self.bypass_create_group:
             print("Creating group...")
@@ -298,14 +285,6 @@ class Setup:
 
                 print("Creating group {}".format(group_name))
                 create_group(group_name)
-
-        # for username, dir in user_dict.items():
-        #     group_name = username.replace("-user", "-group")
-        #     if check_group_exists(group_name):
-        #         continue
-        #
-        #     print("Creating group {}".format(group_name))
-        #     create_group(group_name)
 
         if not is_sudo_exist():
             print("\033[31mAUTHENTICATING REQUIRED\033[0m")
@@ -321,7 +300,7 @@ class Setup:
                 username = app_info["currentUser"]
 
                 exists = check_user_exists(username)
-
+                print("{} {}".format(username, exists))
                 if exists:
                     continue
 
