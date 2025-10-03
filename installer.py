@@ -167,7 +167,7 @@ def create_group(group_name):
     try:
         subprocess.run(["sudo", "groupadd", group_name], check=True)
     except Exception as error:
-        raise Exception("Unable to create new group name {} ERROR:{}".format(file_path, error))
+        raise Exception("Unable to create new group name {} ERROR:{}".format(group_name, error))
 
 def check_group_exists(group_name):
     try:
@@ -224,6 +224,8 @@ class Setup:
         self.logger.setLevel(logging.INFO)
 
         self.install_application_list = []
+        self.bypass_create_group = True
+        self.bypass_create_user = True
 
         self.arguments_parser()
 
@@ -287,15 +289,16 @@ class Setup:
         #     ]
         # }
 
-        print("Creating group...")
-        for app_name, app_info in applications.items():
-            group_name = app_info["currentUser"]
+        if not self.bypass_create_group:
+            print("Creating group...")
+            for app_name, app_info in applications.items():
+                group_name = app_info["currentUser"]
 
-            if check_group_exists(group_name):
-                continue
+                if check_group_exists(group_name):
+                    continue
 
-            print("Creating group {}".format(group_name))
-            create_group(group_name)
+                print("Creating group {}".format(group_name))
+                create_group(group_name)
 
         # for username, dir in user_dict.items():
         #     group_name = username.replace("-user", "-group")
@@ -312,18 +315,19 @@ class Setup:
         else:
             print("Sudo session exists.")
 
-        print("Creating account for service usage...")
+        if self.bypass_create_user:
+            print("Creating account for service usage...")
 
-        for app_name, app_info in applications.items():
-            username = app_info["currentUser"]
+            for app_name, app_info in applications.items():
+                username = app_info["currentUser"]
 
-            exists = check_user_exists(username)
+                exists = check_user_exists(username)
 
-            if exists:
-                continue
+                if exists:
+                    continue
 
-            print("Creating user {}".format(username))
-            create_user(username)
+                print("Creating user {}".format(username))
+                create_user(username)
 
         # for username, _ in user_dict.items():
         #     exists = check_user_exists(username)
@@ -531,6 +535,8 @@ class Setup:
 
         parser.add_argument('--install-app-names', nargs='*', help='Install app names')
         parser.add_argument('--list-apps', help='List available apps', action='store_true')
+        parser.add_argument('--bypass-create-group', help='Bypass create group process', action='store_true')
+        parser.add_argument('--bypass-create-user', help='Bypass create user process', action='store_true')
 
         args = parser.parse_args()
 
@@ -550,6 +556,14 @@ class Setup:
             self.logger.error("The install-app-names list is empty. Try run this script with \"--install-app-names <App Name> <Second App Name>\"")
             self.logger.info("If you don't know which application you want to install, use \"--list-apps\" to list available apps.")
             sys.exit(1)
+
+        if args.bypass_create_group:
+            self.bypass_create_group = True
+            self.logger.info("Bypass create group process flag is enabled.")
+
+        if args.bypass_create_user:
+            self.bypass_create_user = True
+            self.logger.info("Bypass create user process flag is enabled.")
 
         for app_name in args.install_app_names:
             if app_name not in applications.keys():
