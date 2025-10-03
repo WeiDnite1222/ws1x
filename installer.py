@@ -224,8 +224,8 @@ class Setup:
         self.logger.setLevel(logging.INFO)
 
         self.install_application_list = []
-        self.bypass_create_group = True
-        self.bypass_create_user = True
+        self.bypass_create_group = False
+        self.bypass_create_user = False
 
         self.arguments_parser()
 
