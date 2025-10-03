@@ -249,15 +249,16 @@ class Setup:
 
         current_venv_path = os.path.join(root_dir, "main-venv")
 
-        # print("Entering virtual environment....")
-        # try:
-        #     subprocess.run(["source", os.path.join(current_venv_path, "bin", "activate")])
-        # except Exception as error:
-        #     print("Failed to enter virtual environment with method A. Try method B instead...")
-        #     try:
-        #         subprocess.run([".", f".{os.path.join(current_venv_path, "bin", "activate")}"], check=True)
-        #     except Exception as error:
-        #         raise Exception("Unable to enter virtual environment ERROR:{}".format(error))
+        if sys.prefix != sys.base_prefix:
+            print("Entering virtual environment....")
+            try:
+                subprocess.run(["source", os.path.join(current_venv_path, "bin", "activate")])
+            except Exception as error:
+                print("Failed to enter virtual environment with method A. Try method B instead...")
+                try:
+                    subprocess.run([".", f".{os.path.join(current_venv_path, "bin", "activate")}"], check=True)
+                except Exception as error:
+                    raise Exception("Unable to enter virtual environment ERROR:{}".format(error))
 
         print("Installing required packages...")
 
