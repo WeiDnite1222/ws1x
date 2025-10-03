@@ -595,4 +595,7 @@ setup = Setup()
 
 
 if __name__ == "__main__":
-    setup.main()
+    try:
+        setup.main()
+    except KeyboardInterrupt:
+        print("Exiting...")
