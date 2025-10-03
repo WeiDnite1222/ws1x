@@ -1,0 +1,16 @@
+{
+  "SpaceNET Manager": "SpaceNET 管理工具",
+  "SpaceNETManager": "SpaceNET管理工具",
+  "SpaceNET Manager > {}": "SpaceNET 管理工具 {}",
+  "Hi, {}": "你好, {}",
+  "List of available servers": "可用伺服器列表",
+  "Server {} # name undefined": "伺服器 {} # 名稱異常",
+  "***ip hidden***": "***IP已隱藏***",
+  "Click to view the IP": "點擊來查看IP",
+  "Non-gui manage is running...": "無GUI版本正在運行...",
+  "Cloudflare Options": "Cloudflare選項",
+  "Server Options": "伺服器選項",
+  "Status Monitor": "狀態預覽",
+  "CLIENT": "客戶端",
+  "SERVER": "伺服器端"
+}

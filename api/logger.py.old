@@ -1,0 +1,102 @@
+import logging
+import sys
+import os
+import datetime
+import colorlog
+
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(root_dir)
+
+from space_net_lib.definition.path import api_data_path
+
+class APILogger(logging.Logger):
+    def __init__(self, name, level=logging.DEBUG, format='%(levelname)s:     %(message)s'):
+        super(APILogger, self).__init__(name, level=level)
+
+        self.current_log_file_path = os.path.join(api_data_path, 'logs', 'current.log')
+        os.makedirs(os.path.dirname(self.current_log_file_path), exist_ok=True)
+
+        formatter = logging.Formatter('%(levelname)s:%(asctime)s : %(message)s')
+        colored_formatter = colorlog.ColoredFormatter(
+            '%(log_color)s%(levelname)s%(reset)s:     %(message)s',
+            log_colors={
+                'DEBUG': 'cyan',
+                'INFO': 'green',
+                'WARNING': 'yellow',
+                'ERROR': 'red',
+                'CRITICAL': 'bold_red',
+            }
+        )
+
+        self.file_handler = logging.FileHandler(self.current_log_file_path, 'w')
+        self.stdout_handler = logging.StreamHandler(sys.stdout)
+        # DO NOT add self.stderr_handler to the handler list ; it will cause duplicate output when logging
+        # uses any type of log method.
+
+        self.file_handler.setFormatter(formatter)
+        self.stdout_handler.setFormatter(colored_formatter)
+
+        self.addHandler(self.file_handler)
+        self.addHandler(self.stdout_handler)
+
+        self.redirect()
+
+    class LoggerWriter:
+        def __init__(self, level, original_stdout):
+            self.level = level
+            self._buffer = ""
+
+            self.original_stdout = original_stdout
+            sys.stdout = self
+
+        def write(self, message):
+            if message.replace("\n", ""):
+                self.level(message.replace("\n", ""))
+
+        def flush(self):
+            pass
+
+    def redirect(self):
+        sys.stdout = self.LoggerWriter(self.error, sys.__stdout__)
+        sys.stderr = self.LoggerWriter(self.info, sys.__stderr__)
+        self.info("Logger redirect standard output finished.")
+
+    def closing(self):
+        self.info("Logger closing...")
+        self.removeHandler(self.file_handler)
+
+        try:
+            new_path = os.path.join(os.path.dirname(self.current_log_file_path), f"{str(datetime.datetime.now())}.log")
+            os.rename(self.current_log_file_path, new_path)
+        except OSError as e:
+            print(e)
+
+
+# !test
+# logging.basicConfig(format='%(asctime)s %(message)s',
+#                          level=logging.DEBUG)
+#
+# api_logger = logging.getLogger("APILogger")
+# api_handler = logging.FileHandler(current_log_path, mode='w')
+# api_handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+# api_logger.addHandler(api_handler)
+#
+# api_settings = APIConfig(logger=api_logger)
+#
+# class LoggerWriter:
+#     def __init__(self, level, original_stdout):
+#         self.level = level
+#         self._buffer = ""
+#
+#         self.original_stdout = original_stdout
+#         sys.stdout = self
+#
+#     def write(self, message):
+#         if message.strip():  # 避免純換行
+#             self.level(message.strip())
+#
+#     def flush(self):
+#         pass
+#
+# sys.stdout = LoggerWriter(api_logger.info, sys.__stdout__)
+# sys.stderr = LoggerWriter(api_logger.error, sys.__stderr__)
