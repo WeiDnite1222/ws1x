@@ -136,7 +136,7 @@ def check_user_exists(user_name):
     try:
         pwd.getpwnam(user_name)
         return True
-    except subprocess.CalledProcessError:
+    except KeyError:
         return False
 
 def create_user(username):
@@ -173,7 +173,7 @@ def check_group_exists(group_name):
     try:
         grp.getgrnam(group_name)
         return True
-    except subprocess.CalledProcessError:
+    except KeyError:
         return False
 
 def add_user_to_group(group_name, user_name):
