@@ -249,7 +249,7 @@ class Setup:
 
         current_venv_path = os.path.join(root_dir, "main-venv")
 
-        if sys.prefix != sys.base_prefix:
+        if sys.prefix == sys.base_prefix:
             print("Entering virtual environment....")
             try:
                 subprocess.run(["source", os.path.join(current_venv_path, "bin", "activate")])
