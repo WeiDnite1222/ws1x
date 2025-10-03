@@ -119,9 +119,9 @@ def create_venv(venv_path):
     except Exception as error:
         raise Exception("Unable to create virtual environment. {}".format(error))
 
-def install_requirements(requirements_file_path):
+def install_requirements(requirements_file_path, pip_path="pip"):
     try:
-        subprocess.run(["pip", "install", "-r", requirements_file_path, "--break-system-packages"],
+        subprocess.run([pip_path, "install", "-r", requirements_file_path, "--break-system-packages"],
                        check=True)
     except Exception as error:
         raise Exception("Unable to install requirements name {} ERROR:{}".format(requirements_file_path, error))
@@ -257,11 +257,11 @@ class Setup:
         #     except Exception as error:
         #         raise Exception("Unable to enter virtual environment ERROR:{}".format(error))
 
-        try:
-            print("Exporting venv pip to PATH...")
-            subprocess.run(["export", f"PATH=\"{current_pip_path}\""])
-        except Exception as error:
-            raise Exception("Unable to export venv pip to PATH. ERROR:{}".format(error))
+        # try:
+        #     print("Exporting venv pip to PATH...")
+        #     subprocess.run(["export", f"PATH=\"{current_pip_path}\""])
+        # except Exception as error:
+        #     raise Exception("Unable to export venv pip to PATH. ERROR:{}".format(error))
 
         print("Installing required packages...")
 
@@ -270,7 +270,8 @@ class Setup:
             print("Processing {}".format(app_name))
 
             if os.path.exists(os.path.join(app_path, "requirements.txt")):
-                install_requirements(os.path.join(app_path, "requirements.txt"))
+                install_requirements(os.path.join(app_path, "requirements.txt"),
+                                     pip_path=current_pip_path)
 
         print("Creating dependencies folder....")
 
