@@ -288,13 +288,14 @@ class Setup:
         #         path.dynamic_pages_data_path, path.dynamic_pages_config_path
         #     ]
         # }
-        print(self.bypass_create_group)
+
         if not self.bypass_create_group:
             print("Creating group...")
             for app_name, app_info in applications.items():
                 group_name = app_info["currentUser"]
 
                 if check_group_exists(group_name):
+                    print(check_group_exists(group_name))
                     continue
 
                 print("Creating group {}".format(group_name))
