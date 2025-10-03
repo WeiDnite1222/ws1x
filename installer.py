@@ -186,11 +186,11 @@ def add_user_to_group(group_name, user_name):
 def allow_user_access_and_execute_in_folder_acl(username, group_name, dir, ignore_error=False, recursion=False):
     try:
         if recursion:
-            subprocess.run(["sudo", "setfacl", "-R", "-m", f"u:{username}:rx", dir], check=True)
-            subprocess.run(["sudo", "setfacl", "-R", "-d", "-m", f"u:{username}:rx", dir], check=True)
+            subprocess.run(["sudo", "setfacl", "-R", "-m", f"u:{username}:rwx", dir], check=True)
+            subprocess.run(["sudo", "setfacl", "-R", "-d", "-m", f"u:{username}:rwx", dir], check=True)
         else:
             subprocess.run(["sudo", "setfacl", "-m", f"u:{username}:rx", dir], check=True)
-            subprocess.run(["sudo", "setfacl", "-d", "-m", f"u:{username}:rx", dir], check=True)
+            subprocess.run(["sudo", "setfacl", "-d", "-m", f"u:{username}:rwx", dir], check=True)
     except Exception as error:
         if not ignore_error:
             raise Exception("Unable to fix permissions of folder {} ERROR:{}".format(dir, error))
