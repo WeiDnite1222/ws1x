@@ -288,7 +288,7 @@ class Setup:
         #         path.dynamic_pages_data_path, path.dynamic_pages_config_path
         #     ]
         # }
-
+        print(self.bypass_create_group)
         if not self.bypass_create_group:
             print("Creating group...")
             for app_name, app_info in applications.items():
