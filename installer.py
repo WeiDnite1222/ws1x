@@ -315,7 +315,7 @@ class Setup:
         else:
             print("Sudo session exists.")
 
-        if self.bypass_create_user:
+        if not self.bypass_create_user:
             print("Creating account for service usage...")
 
             for app_name, app_info in applications.items():
