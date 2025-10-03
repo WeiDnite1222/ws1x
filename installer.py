@@ -525,6 +525,8 @@ class Setup:
 
             bootstrap_file_path = os.path.join("/opt", "SpaceNET", app_name, "bootstrap.sh")
             print("The app name {}'s bootstrap.sh is at {}".format(app_name, bootstrap_file_path))
+            username = app_info['"currentUser"']
+            print("Use command sudo -u \"{}\" bash \"{}\" to launch it".format(username, bootstrap_file_path))
 
         print("The locations of the bootstrap.sh for different services are not in the same path!")
         print("\033[32mInstallation completed. \033[0m")
