@@ -10,6 +10,7 @@ from space_net_lib.utils import tool
 from space_net_lib.logger.logger import DefaultLogger
 import random
 import string
+import grp, pwd
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -133,8 +134,7 @@ def mkdir_windows(venv_path):
 
 def check_user_exists(user_name):
     try:
-        subprocess.run(["sudo", "id", user_name], check=True, stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL)
+        pwd.getpwnam(user_name)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -171,8 +171,7 @@ def create_group(group_name):
 
 def check_group_exists(group_name):
     try:
-        subprocess.run(["getent", "group", group_name], check=True,
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        grp.getgrnam(group_name)
         return True
     except subprocess.CalledProcessError:
         return False
