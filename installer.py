@@ -477,7 +477,7 @@ class Setup:
 
             exists_service_names.append(app_service_name)
 
-
+        print("Ignore any service process questions if you are running on a container.")
         result = str(input("Would you like to start the service when startup? (y/n)"))
 
         if result.lower() == "y":
@@ -505,6 +505,16 @@ class Setup:
         except Exception as error:
             raise Exception("Unable to restart service. ERROR:{}".format(error))
 
+        print("If you running SpaceNET on the container, Use bootstrap.sh to launch application.")
+
+        for app_name, app_info in applications.items():
+            if not app_name in self.install_application_list:
+                continue
+
+            bootstrap_file_path = os.path.join("/opt", "SpaceNET", app_name, "bootstrap.sh")
+            print("The app name {}'s bootstrap.sh is at {}".format(app_name, bootstrap_file_path))
+
+        print("The locations of the bootstrap.sh for different services are not in the same path!")
         print("\033[32mInstallation completed. \033[0m")
 
 
