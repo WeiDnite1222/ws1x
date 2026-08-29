@@ -10,6 +10,8 @@ from space_net_lib.utils import tool
 from space_net_lib.logger.logger import DefaultLogger
 import random
 import string
+import grp, pwd
+import shutil
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -118,9 +120,9 @@ def create_venv(venv_path):
     except Exception as error:
         raise Exception("Unable to create virtual environment. {}".format(error))
 
-def install_requirements(requirements_file_path):
+def install_requirements(requirements_file_path, pip_path="pip"):
     try:
-        subprocess.run(["pip", "install", "-r", requirements_file_path, "--break-system-packages"],
+        subprocess.run([pip_path, "install", "-r", requirements_file_path, "--break-system-packages"],
                        check=True)
     except Exception as error:
         raise Exception("Unable to install requirements name {} ERROR:{}".format(requirements_file_path, error))
@@ -133,10 +135,9 @@ def mkdir_windows(venv_path):
 
 def check_user_exists(user_name):
     try:
-        subprocess.run(["sudo", "id", user_name], check=True, stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL)
+        pwd.getpwnam(user_name)
         return True
-    except subprocess.CalledProcessError:
+    except KeyError:
         return False
 
 def create_user(username):
@@ -171,10 +172,9 @@ def create_group(group_name):
 
 def check_group_exists(group_name):
     try:
-        subprocess.run(["getent", "group", group_name], check=True,
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        grp.getgrnam(group_name)
         return True
-    except subprocess.CalledProcessError:
+    except KeyError:
         return False
 
 def add_user_to_group(group_name, user_name):
@@ -186,11 +186,11 @@ def add_user_to_group(group_name, user_name):
 def allow_user_access_and_execute_in_folder_acl(username, group_name, dir, ignore_error=False, recursion=False):
     try:
         if recursion:
-            subprocess.run(["sudo", "setfacl", "-R", "-m", f"u:{username}:rx", dir], check=True)
-            subprocess.run(["sudo", "setfacl", "-R", "-d", "-m", f"u:{username}:rx", dir], check=True)
+            subprocess.run(["sudo", "setfacl", "-R", "-m", f"u:{username}:rwx", dir], check=True)
+            subprocess.run(["sudo", "setfacl", "-R", "-d", "-m", f"u:{username}:rwx", dir], check=True)
         else:
             subprocess.run(["sudo", "setfacl", "-m", f"u:{username}:rx", dir], check=True)
-            subprocess.run(["sudo", "setfacl", "-d", "-m", f"u:{username}:rx", dir], check=True)
+            subprocess.run(["sudo", "setfacl", "-d", "-m", f"u:{username}:rwx", dir], check=True)
     except Exception as error:
         if not ignore_error:
             raise Exception("Unable to fix permissions of folder {} ERROR:{}".format(dir, error))
@@ -214,6 +214,13 @@ def is_sudo_exist():
     except subprocess.CalledProcessError:
         return False
 
+def required_package_check(logger):
+    if not shutil.which("setfacl"):
+        logger.error("This script required 'setfacl' but it doesn't exist.")
+        raise Exception("RequiredPackageNotInstalledError")
+    elif not shutil.which("sudo"):
+        logger.error("This script required 'sudo' but it doesn't exist.")
+        raise Exception("RequiredPackageNotInstalledError")
 
 class Setup:
     def __init__(self):
@@ -230,10 +237,7 @@ class Setup:
         self.arguments_parser()
 
     def main(self):
-        # if not tool.is_elevated():
-        #     self.logger.error("This script must be run as root(administrator mode in Windows)")
-        #     sys.exit(1)
-
+        required_package_check(self.logger)
         self.logger.info(f"These applications will be install: \n{", ".join(map(str, self.install_application_list))}")
 
         result = str(input("To confirm the install, type 'yes' to continue: "))
@@ -249,16 +253,20 @@ class Setup:
             self.logger.info("Virtual environment already exists")
 
         current_venv_path = os.path.join(root_dir, "main-venv")
+        current_pip_path = os.path.join(current_venv_path, "bin", "pip")
 
-        # print("Entering virtual environment....")
-        # try:
-        #     subprocess.run(["source", os.path.join(current_venv_path, "bin", "activate")])
-        # except Exception as error:
-        #     print("Failed to enter virtual environment with method A. Try method B instead...")
+        # if sys.prefix == sys.base_prefix:
+        #     print("Entering virtual environment....")
         #     try:
-        #         subprocess.run([".", f".{os.path.join(current_venv_path, "bin", "activate")}"], check=True)
+        #         subprocess.run(["source", os.path.join(current_venv_path, "bin", "activate")], check=True)
         #     except Exception as error:
         #         raise Exception("Unable to enter virtual environment ERROR:{}".format(error))
+
+        # try:
+        #     print("Exporting venv pip to PATH...")
+        #     subprocess.run(["export", f"PATH=\"{current_pip_path}\""])
+        # except Exception as error:
+        #     raise Exception("Unable to export venv pip to PATH. ERROR:{}".format(error))
 
         print("Installing required packages...")
 
@@ -267,8 +275,8 @@ class Setup:
             print("Processing {}".format(app_name))
 
             if os.path.exists(os.path.join(app_path, "requirements.txt")):
-                print(os.path.join(app_path, "requirements.txt"))
-                install_requirements(os.path.join(app_path, "requirements.txt"))
+                install_requirements(os.path.join(app_path, "requirements.txt"),
+                                     pip_path=current_pip_path)
 
         print("Creating dependencies folder....")
 
@@ -277,36 +285,16 @@ class Setup:
                 print("Creating folder {}".format(dir))
                 mkdir_in_sudo(dir)
 
-        # user_dict = {
-        #     "spacenet-api-user": [
-        #         path.api_data_path, path.api_config_path
-        #     ],
-        #     "spacenet-manage-user": [
-        #         path.manage_data_path, path.manage_config_path
-        #     ],
-        #     "spacenet-dynamicpages-user": [
-        #         path.dynamic_pages_data_path, path.dynamic_pages_config_path
-        #     ]
-        # }
-
         if not self.bypass_create_group:
             print("Creating group...")
             for app_name, app_info in applications.items():
-                group_name = app_info["currentUser"]
+                group_name = app_info["currentUser"].replace("-user", "-group")
 
                 if check_group_exists(group_name):
                     continue
 
                 print("Creating group {}".format(group_name))
                 create_group(group_name)
-
-        # for username, dir in user_dict.items():
-        #     group_name = username.replace("-user", "-group")
-        #     if check_group_exists(group_name):
-        #         continue
-        #
-        #     print("Creating group {}".format(group_name))
-        #     create_group(group_name)
 
         if not is_sudo_exist():
             print("\033[31mAUTHENTICATING REQUIRED\033[0m")
@@ -315,6 +303,7 @@ class Setup:
         else:
             print("Sudo session exists.")
 
+        print("Flag bypass_create_user {}".format(self.bypass_create_user))
         if not self.bypass_create_user:
             print("Creating account for service usage...")
 
@@ -322,7 +311,6 @@ class Setup:
                 username = app_info["currentUser"]
 
                 exists = check_user_exists(username)
-
                 if exists:
                     continue
 
@@ -344,7 +332,7 @@ class Setup:
             username = app_info["currentUser"]
             group_name = username.replace("-user", "-group")
 
-            print("Adding user {}".format(username))
+            print("Adding user {} to group {}".format(username, group_name))
             add_user_to_group(group_name, username)
 
         # for username, dir in user_dict.items():
@@ -426,7 +414,7 @@ class Setup:
             if app_info['useCustomPort'] is True:
                 app_exec_command += " " + app_info['setPortArg']
             elif app_info.get("defaultPort") is not None:
-                app_exec_command += " " + app_info['setPortArg'] + app_info['defaultPort']
+                app_exec_command += " " + app_info['setPortArg'] + str(app_info['defaultPort'])
 
             bootstrap = textwrap.dedent(f"""#!/bin/bash
                                         # shellcheck disable=SC2164
@@ -499,7 +487,7 @@ class Setup:
 
             exists_service_names.append(app_service_name)
 
-
+        print("Ignore any service process questions if you are running on a container.")
         result = str(input("Would you like to start the service when startup? (y/n)"))
 
         if result.lower() == "y":
@@ -520,13 +508,27 @@ class Setup:
                 except Exception as error:
                     raise Exception("Unable to start service name {} ERROR:{}".format(service_name, error))
 
+        result = str(input("Restart daemon right now? (y/n)"))
 
-        print("Restarting service...")
-        try:
-            subprocess.run(['sudo', "systemctl", "daemon-reload"], check=True)
-        except Exception as error:
-            raise Exception("Unable to restart service. ERROR:{}".format(error))
+        if result.lower() == "y":
+            try:
+                print("Restarting service...")
+                subprocess.run(['sudo', "systemctl", "daemon-reload"], check=True)
+            except Exception as error:
+                raise Exception("Unable to restart service. ERROR:{}".format(error))
 
+        print("If you running SpaceNET on the container, Use bootstrap.sh to launch application.")
+
+        for app_name, app_info in applications.items():
+            if not app_name in self.install_application_list:
+                continue
+
+            bootstrap_file_path = os.path.join("/opt", "SpaceNET", app_name, "bootstrap.sh")
+            print("The app name {}'s bootstrap.sh is at {}".format(app_name, bootstrap_file_path))
+            username = app_info["currentUser"]
+            print("Use command sudo -u \"{}\" bash \"{}\" to launch it".format(username, bootstrap_file_path))
+
+        print("The locations of the bootstrap.sh for different services are not in the same path!")
         print("\033[32mInstallation completed. \033[0m")
 
 
@@ -600,4 +602,7 @@ setup = Setup()
 
 
 if __name__ == "__main__":
-    setup.main()
+    try:
+        setup.main()
+    except KeyboardInterrupt:
+        print("Exiting...")
