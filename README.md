@@ -1,4 +1,4 @@
-# SpaceNET For WeiSpace.NET
+# ws1x
 
 ## This repo is a fork version of the SpaceNET
 
